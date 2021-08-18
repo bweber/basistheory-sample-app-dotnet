@@ -1,5 +1,7 @@
 # Basis Theory .NET Sample App
 
+[![Verify](https://github.com/Basis-Theory/basistheory-sample-app-dotnet/actions/workflows/verify.yml/badge.svg)](https://github.com/Basis-Theory/basistheory-sample-app-dotnet/actions/workflows/verify.yml)
+
 The [Basis Theory](https://basistheory.com/) .NET Sample App
 
 ## Documentation
