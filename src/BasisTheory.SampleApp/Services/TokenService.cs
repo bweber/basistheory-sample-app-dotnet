@@ -78,7 +78,7 @@ namespace BasisTheory.SampleApp.Services
 
             if (context.ProviderKey != null)
             {
-                var encryptedData = await _encryptionService.Encrypt(context.Data, context.ProviderKey);
+                var encryptedData = await _encryptionService.EncryptAsync(context.Data, context.ProviderKey);
                 toCreate.Data = encryptedData.CipherText;
                 toCreate.Encryption = encryptedData.ToEncryptionMetadata();
             }
@@ -116,7 +116,7 @@ namespace BasisTheory.SampleApp.Services
             });
 
             if (context.ProviderKey != null)
-                token.Data = await _encryptionService.Decrypt(token.ToEncryptedData(), context.ProviderKey);
+                token.Data = await _encryptionService.DecryptAsync(token.ToEncryptedData(), context.ProviderKey);
 
             if (context.DataType == DataType.TEXT)
                 Console.WriteLine($"Your decrypted data is: {((string)token.Data).Pastel(Color.Cyan)}");

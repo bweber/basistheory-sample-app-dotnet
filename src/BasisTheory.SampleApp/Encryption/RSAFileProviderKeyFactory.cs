@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using BasisTheory.net.Encryption;
 using BasisTheory.net.Encryption.Entities;
@@ -22,9 +23,10 @@ namespace BasisTheory.SampleApp.Encryption
             _fileService = fileService;
         }
 
-        public async Task<ProviderEncryptionKey> GetOrCreateKeyAsync(string name)
+        public async Task<ProviderEncryptionKey> GetOrCreateKeyAsync(string name,
+            CancellationToken cancellationToken = default)
         {
-            var existingKey = await GetKeyByName(name);
+            var existingKey = await GetKeyByNameAsync(name);
             if (existingKey != null)
             {
                 Console.WriteLine($"It looks like a key already exists for {name}, we will use that one");
@@ -63,12 +65,13 @@ namespace BasisTheory.SampleApp.Encryption
             };
         }
 
-        public async Task<ProviderEncryptionKey> GetKeyByKeyIdAsync(string keyId)
+        public async Task<ProviderEncryptionKey> GetKeyByKeyIdAsync(string keyId,
+            CancellationToken cancellationToken = default)
         {
-            return await GetKeyByName(keyId);
+            return await GetKeyByNameAsync(keyId);
         }
 
-        private async Task<ProviderEncryptionKey> GetKeyByName(string keyId)
+        private async Task<ProviderEncryptionKey> GetKeyByNameAsync(string keyId)
         {
             try
             {
