@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Threading.Tasks;
+using BasisTheory.net.Common.Utilities;
 using BasisTheory.net.Encryption;
 using BasisTheory.net.Encryption.Extensions;
 using BasisTheory.net.Tokens;
@@ -83,10 +84,7 @@ namespace BasisTheory.SampleApp.Services
             }
 
             Console.WriteLine($"POST to {("https://api.basistheory.com/tokens".Pastel(Color.Cyan))}");
-            Console.WriteLine(JsonConvert.SerializeObject(toCreate, Formatting.Indented, new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore
-            }));
+            Console.WriteLine(JsonConvert.SerializeObject(toCreate, Formatting.Indented, new JsonSerializerSettings().InitializeDefaults()));
 
             var token = await _tokenClient.CreateAsync(toCreate);
 
