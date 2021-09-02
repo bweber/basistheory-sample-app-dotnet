@@ -25,14 +25,16 @@ namespace BasisTheory.SampleApp.Services
         private readonly IOptionsService _optionsService;
         private readonly IFileService _fileService;
         private readonly IEncryptionService _encryptionService;
+        private readonly IProviderKeyService _providerKeyService;
 
         public TokenService(ITokenClient tokenClient, IOptionsService optionsService, IFileService fileService,
-            IEncryptionService encryptionService)
+            IEncryptionService encryptionService, IProviderKeyService providerKeyService)
         {
             _tokenClient = tokenClient;
             _optionsService = optionsService;
             _fileService = fileService;
             _encryptionService = encryptionService;
+            _providerKeyService = providerKeyService;
         }
 
         public async Task Process(Options options)
@@ -115,8 +117,11 @@ namespace BasisTheory.SampleApp.Services
                 Decrypt = true
             });
 
-            if (context.ProviderKey != null)
-                token.Data = await _encryptionService.DecryptAsync(token.ToEncryptedData(), context.ProviderKey);
+            if (token.Encryption?.KeyEncryptionKey != null)
+            {
+                var providerKey = await _providerKeyService.GetKeyByKeyIdAsync(token.Encryption.KeyEncryptionKey);
+                token.Data = await _encryptionService.DecryptAsync(token.ToEncryptedData(), providerKey);
+            }
 
             if (context.DataType == DataType.TEXT)
                 Console.WriteLine($"Your decrypted data is: {((string)token.Data).Pastel(Color.Cyan)}");
