@@ -74,6 +74,7 @@ namespace BasisTheory.SampleApp.Services
         {
             var toCreate = new Token
             {
+                Type = "token",
                 Data = context.Data,
                 Metadata = context.Metadata
             };
