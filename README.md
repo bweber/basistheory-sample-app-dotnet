@@ -17,9 +17,8 @@ Verify .NET is installed by running: `dotnet --list-sdks` and verify an entry wi
 
 1. Login to [portal.basistheory.com](https://portal.basistheory.com)
 2. Create a new `server_to_server` application with the following token permissions:
-    1. `token:decrypt`
-    2. `token:read`
-    3. `token:create`
+    1. `token:general:read:high`
+    2. `token:general:create`
 3. Copy and save the `API Key` for the newly created application
 
 ## Run the Sample App

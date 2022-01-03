@@ -6,10 +6,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="BasisTheory.net" Version="1.14.0" />
+      <PackageReference Include="BasisTheory.net" Version="1.19.0" />
       <PackageReference Include="BasisTheory.net.AspNetCore" Version="1.14.0" />
       <PackageReference Include="CommandLineParser" Version="2.8.0" />
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
       <PackageReference Include="Pastel" Version="2.1.0" />
     </ItemGroup>
 

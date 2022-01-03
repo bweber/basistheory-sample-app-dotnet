@@ -7,7 +7,6 @@ using BasisTheory.net.Encryption.Extensions;
 using BasisTheory.net.Tokens;
 using BasisTheory.net.Tokens.Entities;
 using BasisTheory.net.Tokens.Extensions;
-using BasisTheory.net.Tokens.Requests;
 using BasisTheory.SampleApp.Entities;
 using Newtonsoft.Json;
 using Pastel;
@@ -27,8 +26,12 @@ namespace BasisTheory.SampleApp.Services
         private readonly IEncryptionService _encryptionService;
         private readonly IProviderKeyService _providerKeyService;
 
-        public TokenService(ITokenClient tokenClient, IOptionsService optionsService, IFileService fileService,
-            IEncryptionService encryptionService, IProviderKeyService providerKeyService)
+        public TokenService(
+            ITokenClient tokenClient,
+            IOptionsService optionsService,
+            IFileService fileService,
+            IEncryptionService encryptionService,
+            IProviderKeyService providerKeyService)
         {
             _tokenClient = tokenClient;
             _optionsService = optionsService;
@@ -53,12 +56,6 @@ namespace BasisTheory.SampleApp.Services
                     return;
 
                 await RetrieveEncryptedToken(createdToken, context);
-
-                Console.WriteLine("The data that sits behind your token is encrypted and has to be decrypted to be readable.");
-                if (!PromptToContinue("Would you like to decrypt it?"))
-                    return;
-
-                await RetrieveDecryptedToken(createdToken, context);
 
                 Console.WriteLine("You just created a token and did end to end encryption/decryption.");
                 createToken = PromptToContinue("Want to do another one?");
@@ -87,7 +84,8 @@ namespace BasisTheory.SampleApp.Services
             }
 
             Console.WriteLine($"POST to {("https://api.basistheory.com/tokens".Pastel(Color.Cyan))}");
-            Console.WriteLine(JsonConvert.SerializeObject(toCreate, Formatting.Indented, new JsonSerializerSettings().InitializeDefaults()));
+            Console.WriteLine(JsonConvert.SerializeObject(toCreate, Formatting.Indented,
+                new JsonSerializerSettings().InitializeDefaults()));
 
             var token = await _tokenClient.CreateAsync(toCreate);
 
@@ -99,40 +97,36 @@ namespace BasisTheory.SampleApp.Services
 
         private async Task RetrieveEncryptedToken(Token createdToken, TokenContext context)
         {
-            Console.WriteLine($"GET from {($"https://api.basistheory.com/tokens/{createdToken.Id}".Pastel(Color.Cyan))}");
+            Console.WriteLine("The data returned depends on your token:general:read:<impact_level> permission.");
+            Console.WriteLine("If your impact_level is high, plaintext will be returned.");
+            Console.WriteLine("If your impact_level is low or moderate, the data will be redacted.");
+            Console.WriteLine("These token privacy settings can be overridden during token creation.");
+            Console.WriteLine("The token you just created has the default impact level (high) and restriction policy (redact).");
+            Console.WriteLine();
+            Console.WriteLine(
+                $"GET from {($"https://api.basistheory.com/tokens/{createdToken.Id}".Pastel(Color.Cyan))}");
 
             var token = await _tokenClient.GetByIdAsync(createdToken.Id);
 
-            Console.WriteLine(context.DataType == DataType.TEXT
-                ? $"Encrypted ciphertext is: {((string) token.Data).Pastel(Color.Cyan)}"
-                : $"Encrypted file: {token.Metadata["file"].Pastel(Color.Cyan)}");
-            Console.WriteLine();
+            if (context.ProviderKey == null)
+            {
+                PrintTokenData(token, context);
+            }
+            else
+            {
+                await DecryptTokenData(token, context);
+            }
         }
 
-        private async Task RetrieveDecryptedToken(Token createdToken, TokenContext context)
+        private async Task DecryptTokenData(Token token, TokenContext context)
         {
-            Console.WriteLine($"GET from {($"https://api.basistheory.com/tokens/{createdToken.Id}/decrypt".Pastel(Color.Cyan))}");
-
-            var token = await _tokenClient.GetByIdAsync(createdToken.Id, new TokenGetByIdRequest
-            {
-                Decrypt = true
-            });
-
             if (token.Encryption?.KeyEncryptionKey != null)
             {
                 var providerKey = await _providerKeyService.GetKeyByKeyIdAsync(token.Encryption.KeyEncryptionKey);
                 token.Data = await _encryptionService.DecryptAsync(token.ToEncryptedData(), providerKey);
             }
 
-            if (context.DataType == DataType.TEXT)
-                Console.WriteLine($"Your decrypted data is: {((string)token.Data).Pastel(Color.Cyan)}");
-            else
-            {
-                var outputPath = _fileService.SaveFileData(new FileData($"output/{token.Metadata["file"]}", Convert.FromBase64String(token.Data)));
-                Console.WriteLine($"Your decrypted file was written to: {outputPath.Pastel(Color.Cyan)}");
-            }
-
-            Console.WriteLine();
+            PrintTokenData(token, context);
         }
 
         private static bool PromptToContinue(string question)
@@ -149,6 +143,23 @@ namespace BasisTheory.SampleApp.Services
             Console.WriteLine();
 
             return response == ConsoleKey.Y;
+        }
+
+        private void PrintTokenData(Token token, TokenContext context)
+        {
+            if (context.DataType == DataType.TEXT)
+            {
+                Console.WriteLine(
+                    $"Your token data is: {((string) token.Data ?? String.Empty).Pastel(Color.Cyan)}");
+            }
+            else
+            {
+                var outputPath = _fileService.SaveFileData(new FileData($"output/{token.Metadata["file"]}",
+                    Convert.FromBase64String(token.Data ?? String.Empty)));
+                Console.WriteLine($"Your token data was written to: {outputPath.Pastel(Color.Cyan)}");
+            }
+
+            Console.WriteLine();
         }
     }
 }
